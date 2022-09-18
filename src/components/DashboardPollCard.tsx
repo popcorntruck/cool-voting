@@ -23,7 +23,7 @@ export const DashboardPollCard: React.FC<
   const [embedCopied, setEmbedCopied] = useState(false);
   return (
     <button className="bg-zinc-800 p-3 rounded h-28 w-[20rem]">
-      <NextLink href={`/${poll.id}`}>
+      <NextLink href={`/dash/${poll.id}`}>
         <div>
           {poll.question}
           <p className="bold">{poll._count.votes} Votes</p>

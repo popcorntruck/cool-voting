@@ -1,27 +1,44 @@
-import type { GetServerSidePropsContext, NextLayoutPage, NextPage } from "next";
+import type { GetServerSidePropsContext, NextLayoutPage } from "next";
 import { useSession } from "next-auth/react";
-import { Header } from "../components/Header";
-import { MetaTags } from "../components/MetaTags";
-import { PollHomeView } from "../components/PollHomeView";
-import { SignInThing } from "../components/SignInThing";
+import { HomeLayout } from "../components/home/HomeLayout";
+import { Button } from "../components/ui/Button";
 import { getAuthSession } from "../server/common/getServerSession";
+import NextLink from "next/link";
+import { SignInThing } from "../components/SignInThing";
+import { HiArrowNarrowLeft } from "react-icons/hi";
 
-const Home: NextLayoutPage = () => {
-  const { data } = useSession();
-
-  if (!data) {
-    return (
-      <main className="h-screen w-screen flex items-center justify-center">
-        <SignInThing signInMsg="You musi stin in" />
-      </main>
-    );
-  }
+const HomePage: NextLayoutPage = () => {
+  const { status } = useSession();
 
   return (
-    <main className="p-4">
-      <Header />
-      <PollHomeView />
-    </main>
+    <div className="flex flex-col text-center">
+      <h3>Shitty Polls</h3>
+
+      <div className="border-b border-zinc-700 my-2" />
+
+      <div className="text-xl">
+        <strong>Blazingly Fast & Simple</strong> polls.
+      </div>
+
+      <div className="my-3 outline outline-1 outline-zinc-800 rounded p-3 text-left">
+        <h4 className=" mb-2">How to use: </h4>
+
+        <p>1. Create a poll</p>
+        <p>2. Show the poll embed (if you want)</p>
+        <p>3. Send the vote URL</p>
+        <p>4. Hope people vote.</p>
+      </div>
+
+      {status === "authenticated" ? (
+        <NextLink href={"/dash"}>
+          <Button>
+            <HiArrowNarrowLeft size={24} /> Go to Dashboard
+          </Button>
+        </NextLink>
+      ) : (
+        <SignInThing />
+      )}
+    </div>
   );
 };
 
@@ -33,6 +50,6 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
   };
 };
 
-Home.getLayout = (x) => <MetaTags>{x}</MetaTags>;
+HomePage.getLayout = (x) => <HomeLayout>{x}</HomeLayout>;
 
-export default Home;
+export default HomePage;

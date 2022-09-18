@@ -1,17 +1,16 @@
 import { GetServerSidePropsContext, NextLayoutPage } from "next";
 import { useRouter } from "next/router";
-import React, { useEffect } from "react";
+import React from "react";
 import { FiCopy } from "react-icons/fi";
 import { ImStop } from "react-icons/im";
-import { DashboardEmbedsConnected } from "../components/DashboardEmbedsConnected";
-import { MainLayout } from "../components/MainLayout";
-import { Button } from "../components/ui/Button";
-import { Spinner } from "../components/ui/Spinner";
-import { VoteResultsBar } from "../components/VoteResultsBar";
-import { VoteResultsBarController } from "../components/VoteResultsBarController";
-import { getAuthSession } from "../server/common/getServerSession";
-import { SupabaseProvider, useSupabaseStore } from "../utils/supabase";
-import { trpc } from "../utils/trpc";
+import { DashboardEmbedsConnected } from "../../components/DashboardEmbedsConnected";
+import { DashLayout } from "../../components/MainLayout";
+import { Button } from "../../components/ui/Button";
+import { Spinner } from "../../components/ui/Spinner";
+import { VoteResultsBarController } from "../../components/VoteResultsBarController";
+import { getAuthSession } from "../../server/common/getServerSession";
+import { SupabaseProvider, useSupabaseStore } from "../../utils/supabase";
+import { trpc } from "../../utils/trpc";
 
 const copyUrlToClipboard = (path: string) => {
   if (!process.browser) return;
@@ -125,7 +124,7 @@ const PollDashboard: NextLayoutPage = () => {
   );
 };
 
-PollDashboard.getLayout = (p) => <MainLayout>{p}</MainLayout>;
+PollDashboard.getLayout = (p) => <DashLayout>{p}</DashLayout>;
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
   return {

@@ -1,11 +1,11 @@
 import { useSession } from "next-auth/react";
 import Head from "next/head";
 import React from "react";
-import { Header } from "./Header";
+import { DashboardHeader } from "./Header";
 import { MetaTags } from "./MetaTags";
 import { SignInThing } from "./SignInThing";
 
-export const MainLayout = ({ children }: React.PropsWithChildren) => {
+export const DashLayout = ({ children }: React.PropsWithChildren) => {
   const { status } = useSession();
 
   if (status === "unauthenticated") {
@@ -21,7 +21,7 @@ export const MainLayout = ({ children }: React.PropsWithChildren) => {
   return (
     <main className="p-4">
       <MetaTags />
-      <Header />
+      <DashboardHeader />
 
       {children}
     </main>

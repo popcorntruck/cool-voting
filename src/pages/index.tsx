@@ -12,7 +12,7 @@ const HomePage: NextLayoutPage = () => {
 
   return (
     <div className="flex flex-col text-center">
-      <h3>Shitty Polls</h3>
+      <h3>Big Daddy Polls</h3>
 
       <div className="border-b border-zinc-700 my-2" />
 

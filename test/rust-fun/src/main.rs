@@ -29,7 +29,18 @@ async fn main() {
         .parse::<i32>()
         .unwrap();
 
-    let mut send_vote_interval = tokio::time::interval(Duration::from_millis(50));
+        println!("Whats the vote interval?");
+
+    let poll_vote_interval = stdin
+        .lock()
+        .lines()
+        .next()
+        .expect("there was no next line")
+        .expect("the line could not be read")
+        .parse::<u64>()
+        .unwrap();
+
+    let mut send_vote_interval = tokio::time::interval(Duration::from_millis(poll_vote_interval));
 
     let http_client = reqwest::Client::new();
 

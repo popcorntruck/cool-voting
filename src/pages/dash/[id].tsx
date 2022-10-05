@@ -1,7 +1,7 @@
 import { GetServerSidePropsContext, NextLayoutPage } from "next";
 import { useRouter } from "next/router";
 import React, { useState } from "react";
-import { FiCopy } from "react-icons/fi";
+import { FiCopy, FiTrash2 } from "react-icons/fi";
 import { ImStop } from "react-icons/im";
 import { AutoAnimate } from "../../components/AutoAnimate";
 import { ConfirmPollEndModal } from "../../components/ConfirmPollEndModal";
@@ -17,6 +17,8 @@ import {
   useSupabaseStore,
 } from "../../utils/supabase";
 import { trpc } from "../../utils/trpc";
+import { IoMdTimer } from "react-icons/io";
+import { ConfirmModal } from "../../components/ConfirmModal";
 
 const copyUrlToClipboard = (path: string) => {
   if (!process.browser) return;
@@ -83,7 +85,18 @@ export const PollDashboardInner: React.FC<
         setShowEndConfirmModal(false);
       },
     });
+
+  const { push } = useRouter();
+  const { mutate: mutateDeletePoll, isLoading: loadingDeletePoll } =
+    trpc.proxy.poll.deletePoll.useMutation({
+      onSuccess: (d) => {
+        if (d.success) {
+          push("/dash");
+        }
+      },
+    });
   const [showEndConfirmModal, setShowEndConfirmModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const { send: sendPollChannelMessage } = useChannelEvent(
     `poll:${id}`,
@@ -132,6 +145,12 @@ export const PollDashboardInner: React.FC<
 
         <div className="border-b border-zinc-700" />
 
+        <Button className="w-full">
+          <IoMdTimer size={24} /> Countdown
+        </Button>
+
+        <div className="border-b border-zinc-700" />
+
         <AutoAnimate>
           {pollData.poll.ended ? (
             <div className="p-4 bg-red-500 rounded-lg text-white">
@@ -147,6 +166,15 @@ export const PollDashboardInner: React.FC<
             </Button>
           )}
         </AutoAnimate>
+
+        <Button
+          color="transparent"
+          className="bg-red-500 hover:bg-red-600"
+          onClick={() => setShowDeleteModal(true)}
+        >
+          <FiTrash2 size={24} />
+          Delete Poll
+        </Button>
       </div>
 
       <ConfirmPollEndModal
@@ -159,6 +187,15 @@ export const PollDashboardInner: React.FC<
           sendPollChannelMessage({});
         }}
         confirmButtonLoading={loadingEndPoll}
+      />
+
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        requestClose={() => setShowDeleteModal(false)}
+        title={`Delete ${pollData.poll.question}?`}
+        description="Are you sure you want to delete this poll?"
+        onClickConfirm={() => mutateDeletePoll({ pollId: id })}
+        confirmButtonLoading={loadingDeletePoll}
       />
     </main>
   );

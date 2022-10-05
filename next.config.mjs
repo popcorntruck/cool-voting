@@ -2,7 +2,6 @@
 import { env } from "./src/env/server.mjs";
 
 import bundleAnalyzer from "@next/bundle-analyzer";
-
 /**
  * Don't be scared of the generics here.
  * All they do is to give us autocompletion when using this.

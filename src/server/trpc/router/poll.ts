@@ -139,4 +139,16 @@ export const pollRouter = t.router({
         },
       });
     }),
+  deletePoll: authedProcedure
+    .input(z.object({ pollId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.prisma.poll.deleteMany({
+        where: {
+          id: input.pollId,
+          ownerId: ctx.session.user.id,
+        },
+      });
+
+      return { success: true };
+    }),
 });

@@ -22,7 +22,9 @@ export const EmbedPageInner: React.FC<
 export const EmbedRealtimeMessageListener = ({ id }: { id: string }) => {
   const tCtx = trpc.proxy.useContext();
   useChannelEvent(`poll:${id}`, "refetch", () => {
-    tCtx.poll.getById.refetch();
+    tCtx.poll.getById.invalidate({
+      id,
+    });
   });
   return null;
 };

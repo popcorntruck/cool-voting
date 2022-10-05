@@ -1,15 +1,21 @@
 import { GetServerSidePropsContext, NextLayoutPage } from "next";
 import { useRouter } from "next/router";
-import React from "react";
+import React, { useState } from "react";
 import { FiCopy } from "react-icons/fi";
 import { ImStop } from "react-icons/im";
+import { AutoAnimate } from "../../components/AutoAnimate";
+import { ConfirmPollEndModal } from "../../components/ConfirmPollEndModal";
 import { DashboardEmbedsConnected } from "../../components/DashboardEmbedsConnected";
 import { DashLayout } from "../../components/MainLayout";
 import { Button } from "../../components/ui/Button";
 import { Spinner } from "../../components/ui/Spinner";
 import { VoteResultsBarController } from "../../components/VoteResultsBarController";
 import { getAuthSession } from "../../server/common/getServerSession";
-import { SupabaseProvider, useSupabaseStore } from "../../utils/supabase";
+import {
+  SupabaseProvider,
+  useChannelEvent,
+  useSupabaseStore,
+} from "../../utils/supabase";
 import { trpc } from "../../utils/trpc";
 
 const copyUrlToClipboard = (path: string) => {
@@ -58,6 +64,33 @@ export const PollDashboardInner: React.FC<
       }
     );
 
+  const tctx = trpc.proxy.useContext();
+  const { mutate: mutateEndPoll, isLoading: loadingEndPoll } =
+    trpc.proxy.poll.endPoll.useMutation({
+      onSuccess: () => {
+        tctx.poll.getById.setData(
+          (o) => ({
+            ...o!,
+            poll: {
+              ...o!.poll,
+              ended: true,
+            },
+          }),
+          {
+            id,
+          }
+        );
+        setShowEndConfirmModal(false);
+      },
+    });
+  const [showEndConfirmModal, setShowEndConfirmModal] = useState(false);
+
+  const { send: sendPollChannelMessage } = useChannelEvent(
+    `poll:${id}`,
+    "refetch",
+    () => {}
+  );
+
   if (pollLoading) {
     return <Spinner size="4" />;
   }
@@ -71,13 +104,15 @@ export const PollDashboardInner: React.FC<
   }
 
   return (
-    <main className="md:flex w-full md:space-x-4 ">
+    <main className="md:flex w-full md:space-x-4">
       <div className="w-full space-y-2">
         <div className="flex justify-between">
           <h4>{pollData.poll.question}</h4>
-          <h4>{getTotalVotes(pollVotes || [])} Votes</h4>
+          <h4>
+            {pollData.poll.ended && "FINAL RESULTS - "}
+            {getTotalVotes(pollVotes || [])} Votes
+          </h4>
         </div>
-
         <VoteResultsBarController pollId={id} />
       </div>
       <div className="w-full md:w-96 mt-4 flex flex-col space-y-3">
@@ -97,14 +132,34 @@ export const PollDashboardInner: React.FC<
 
         <div className="border-b border-zinc-700" />
 
-        <Button
-          className="w-full"
-          color="secondary"
-          onClick={() => copyUrlToClipboard(`/embed/${id}`)}
-        >
-          <ImStop size={24} className="mr-1" /> Stop Poll
-        </Button>
+        <AutoAnimate>
+          {pollData.poll.ended ? (
+            <div className="p-4 bg-red-500 rounded-lg text-white">
+              This poll has ended
+            </div>
+          ) : (
+            <Button
+              className="w-full"
+              color="secondary"
+              onClick={() => setShowEndConfirmModal(true)}
+            >
+              <ImStop size={24} className="mr-1" /> Stop Poll
+            </Button>
+          )}
+        </AutoAnimate>
       </div>
+
+      <ConfirmPollEndModal
+        isOpen={showEndConfirmModal}
+        requestClose={() => setShowEndConfirmModal(false)}
+        onClickConfirm={() => {
+          mutateEndPoll({
+            pollId: pollData.poll.id,
+          });
+          sendPollChannelMessage({});
+        }}
+        confirmButtonLoading={loadingEndPoll}
+      />
     </main>
   );
 };

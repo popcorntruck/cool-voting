@@ -51,6 +51,13 @@ export const VotePageInner: React.FC<
         <h4>You already voted!</h4>
       </div>
     );
+  } else if (data?.poll.ended) {
+    body = (
+      <div className="flex items-center space-x-2">
+        <TbCheck size={24} />
+        <h4>This poll has ended</h4>
+      </div>
+    );
   } else if (data?.poll) {
     body = <VotePageBox poll={data.poll} />;
   } else if (!isLoading && !data) {

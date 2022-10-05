@@ -1,4 +1,8 @@
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import {
+  createClient,
+  RealtimeChannel,
+  SupabaseClient,
+} from "@supabase/supabase-js";
 import { env } from "../env/client.mjs";
 import createStore from "zustand/vanilla";
 import create, { useStore } from "zustand";
@@ -134,4 +138,62 @@ export function usePresence(
   });
 
   return { presenceData };
+}
+
+export function useChannelEvent<TMessage = any>(
+  channelId: string,
+  channelEvent: string,
+  callback: (data: TMessage) => void
+) {
+  const { client } = useSupabaseStore();
+  const stableCallback = useRef(callback);
+  const [channel, setChannel] = useState<RealtimeChannel | null>(null);
+
+  useEffect(() => {
+    stableCallback.current = callback;
+  }, [callback]);
+
+  useEffectOnce(() => {
+    const chan = client.channel(channelId);
+    setChannel(chan);
+
+    const sub = chan
+      .on("broadcast", { event: channelEvent }, (payload: any) => {
+        console.log(`Recv message from (${channelId}, ${channelEvent})`);
+        stableCallback.current(payload);
+      })
+      .subscribe((s: string) => {
+        if (s === "SUBSCRIBED") {
+          console.log(
+            "Attached to realtime channel: ",
+            channelId,
+            " Event: ",
+            channelEvent
+          );
+        }
+      });
+
+    return () => {
+      sub.unsubscribe();
+    };
+  });
+
+  return {
+    channel,
+    send: async (data: TMessage) => {
+      if (!channel) return;
+
+      if (channel.canPush()) {
+        const msgStatus = await channel.send({
+          type: "broadcast",
+          event: channelEvent,
+          payload: data,
+        });
+
+        console.log(
+          `Sent message: (${channelId}, ${channelEvent}) - Status: ${msgStatus}`
+        );
+      }
+    },
+  };
 }

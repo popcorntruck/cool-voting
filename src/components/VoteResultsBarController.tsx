@@ -2,16 +2,18 @@ import type { PollVote, Prisma } from "@prisma/client";
 import React, { useState } from "react";
 import { useDatabaseChange } from "../utils/supabase";
 import { trpc } from "../utils/trpc";
+import { AutoAnimate } from "./AutoAnimate";
 import { Spinner } from "./ui/Spinner";
 import { VoteResultsBar } from "./VoteResultsBar";
 
 interface VoteResultsBarControllerProps {
   pollId: string;
+  isEmbed?: boolean;
 }
 
 export const VoteResultsBarController: React.FC<
   React.PropsWithChildren<VoteResultsBarControllerProps>
-> = ({ pollId }) => {
+> = ({ pollId, isEmbed = false }) => {
   const tctx = trpc.proxy.useContext();
   // const { data, isLoading, error, refetch } =
   //   trpc.proxy.poll.getByIdWithVotes.useQuery(
@@ -114,5 +116,17 @@ export const VoteResultsBarController: React.FC<
     return <h4>Poll not found</h4>;
   }
 
-  return <VoteResultsBar poll={pollData.poll} votes={votesData || []} />;
+  if (!isEmbed)
+    return <VoteResultsBar poll={pollData.poll} votes={votesData || []} />;
+
+  return (
+    <AutoAnimate className="space-y-2">
+      {isEmbed && pollData.poll.ended && (
+        <div className="bg-zinc-800 rounded-lg p-2 bg-opacity-50">
+          <h4>Poll Ended!</h4>
+        </div>
+      )}
+      <VoteResultsBar poll={pollData.poll} votes={votesData || []} />
+    </AutoAnimate>
+  );
 };

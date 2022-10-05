@@ -1,5 +1,6 @@
 import type { Poll, Prisma } from "@prisma/client";
 import React from "react";
+import { motion } from "framer-motion";
 
 interface VoteResultsBarProps {
   poll: Poll;
@@ -26,31 +27,42 @@ export const VoteResultsBar: React.FC<
 
   getTotalVotes(votes);
 
+  const votePercentsArr = poll.options.map(
+    (_, idx) =>
+      getPercent(votes?.find(({ choice }) => choice === idx + 1)?._count) || 0
+  );
+  const winner = votePercentsArr.indexOf(Math.max(...votePercentsArr));
+
+  console.log("WINNER", winner);
+
   return (
     <div className="space-y-3">
-      {poll.options.map((d, idx) => (
-        <div
-          className="w-full h-24 rounded p-5 flex justify-between items-center bg-green border border-zinc-700"
-          style={{
-            background: `linear-gradient(to right, rgb(34, 197, 94) ${getPercent(
-              votes?.find(({ choice }) => choice === idx + 1)?._count
-            )?.toFixed()}%, transparent ${getPercent(
-              votes?.find(({ choice }) => choice === idx + 1)?._count
-            )?.toFixed()}% 100%)`,
-          }}
-          key={`pq_idx_${idx}`}
-        >
-          <h4>{idx + 1}.</h4>
-          <h4>{d}</h4>
+      {poll.options.map((d, idx) => {
+        const percent = getPercent(
+          votes?.find(({ choice }) => choice === idx + 1)?._count
+        )?.toFixed();
+        return (
+          <div
+            className="w-full h-24 rounded p-5 flex justify-between items-center  border border-zinc-700"
+            style={{
+              background: `linear-gradient(to right, ${
+                poll.ended
+                  ? idx === winner
+                    ? `rgb(219, 39, 119)`
+                    : `#27272A`
+                  : `rgb(34, 197, 94)`
+              } ${percent}%, transparent ${percent}% 100%)`,
+            }}
+            key={`pq_idx_${idx}`}
+          >
+            <h4>{idx + 1}.</h4>
+            {/* // */}
+            <h4>{d}</h4>
 
-          <h4>
-            {getPercent(
-              votes?.find(({ choice }) => choice === idx + 1)?._count
-            )?.toFixed()}
-            %
-          </h4>
-        </div>
-      ))}
+            <h4>{percent}%</h4>
+          </div>
+        );
+      })}
     </div>
   );
 };

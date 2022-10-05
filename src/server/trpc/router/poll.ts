@@ -101,11 +101,41 @@ export const pollRouter = t.router({
           message: "You have already voted on this poll",
         });
       }
+
+      if (
+        (
+          await ctx.prisma.poll.findUnique({
+            where: {
+              id: input.pollId,
+            },
+          })
+        )?.ended
+      ) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "You can't vote on an inactive poll",
+        });
+      }
+
       return await ctx.prisma.pollVote.create({
         data: {
           pollId: input.pollId,
           choice: input.choice,
           voteToken: ctx.voterToken,
+        },
+      });
+    }),
+
+  endPoll: authedProcedure
+    .input(z.object({ pollId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      return await ctx.prisma.poll.updateMany({
+        data: {
+          ended: true,
+        },
+        where: {
+          id: input.pollId,
+          ownerId: ctx.session.user.id,
         },
       });
     }),
